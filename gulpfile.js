@@ -9,7 +9,7 @@ gulp.task('browserify', function () {//works taken from : https://wehavefaces.ne
     .bundle()
     .pipe(source('bundle.js'))
     .pipe(notify({
-      message: 'Generated file: <%= file.relative %>',
+      message: 'Generated file: <%= file.relative %>'
     }))
     .pipe(gulp.dest('./www/js'));
 });
@@ -97,7 +97,9 @@ gulp.task('watchify', function() {
 //https://scotch.io/tutorials/automate-your-tasks-easily-with-gulp-js - gulp.watch()
 //https://css-tricks.com/gulp-for-beginners/ - gulp tricks
 var browserSync = require('browser-sync').create();
-var notifier = require('node-notifier');
+var notifier = require('node-notifier');//https://davidwalsh.name/system-notifications-node
+var fs = require('fs');
+var path = require('path');
 
 // Static server
 gulp.task('browser-sync', function() {
@@ -117,21 +119,29 @@ gulp.task('watch-js', ['browserify'], function (done) {//works taken from : http
 });
 
 function noti() {
-  browserSync.reload
+  //browserSync.reload
   notifier.notify({
     'title': 'Gulp notification',
     'message': 'reloaded browser',
-    'wait': true
+    //'wait': true
+    //icon: fs.readFileSync(__dirname + '/icon.jpg'),
+    icon: path.join(__dirname, 'icon.jpg'),
+    timeout : 5
   });
 }
 
 gulp.task('serve', ['browser-sync'], function() {
   gulp.watch(config.js.watch, ['browserify']);
-  gulp.watch(config.js.outputDir + '/bundle.js', browserSync.reload);//works!
+  //gulp.watch('./www/js/bundle.js', browserSync.reload);//works!
+  //gulp.watch(config.js.outputDir + '/bundle.js', browserSync.reload);//works!
   // gulp.watch(config.js.outputDir + '/bundle.js')
   //   .on('change', noti);//works!
     // notifier.notify({
     //   'title': 'My notification',
     //   'message': 'Hello, there!'
     // });
+
+  browserSync.watch(config.js.watch, browserSync.reload);//works!!
+  gulp.watch(config.js.outputDir + '/bundle.js')
+  .on('change', noti);
 });
