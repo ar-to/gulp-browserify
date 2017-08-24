@@ -10,7 +10,7 @@ gulp.task('browserify', function () {//works taken from : https://wehavefaces.ne
     .pipe(source('bundle.js'))
     .pipe(notify({
       message: 'Generated file: <%= file.relative %>',
-    })) 
+    }))
     .pipe(gulp.dest('./www/js'));
 });
 
@@ -33,8 +33,8 @@ var config = {
   js: {
     src: './src/js/main.js',
     watch: './src/js/**/*',
-    outputDir: './build/',
-    outputFile: 'build.js',
+    outputDir: './www/js',
+    outputFile: 'bundle.js',
   },
 };
 
@@ -71,13 +71,13 @@ function bundle(bundler) {
     .pipe(notify({
       message: 'Generated file: <%= file.relative %>',
     })) // Output the file being created
-    .pipe(bundleTimer) // Output time timing of the file creation
-    .pipe(livereload()); // Reload the view in the browser
+    .pipe(bundleTimer); // Output time timing of the file creation
+    //.pipe(livereload()); // Reload the view in the browser
 }
 
 // Gulp task for build
-gulp.task('default', function() {
-  livereload.listen(); // Start livereload server
+gulp.task('watchify', function() {
+  //livereload.listen(); // Start livereload server
   var args = merge(watchify.args, { debug: true }); // Merge in default watchify args with browserify arguments
 
   var bundler = browserify(config.js.src, args) // Browserify
@@ -92,3 +92,46 @@ gulp.task('default', function() {
 });
 
 //http://blog.qhashtech.com/2015/10/09/gulp-task-to-run-the-web-server-and-live-reload-the-changes-in-browser/
+
+//https://browsersync.io/docs/gulp - browser-sync
+//https://scotch.io/tutorials/automate-your-tasks-easily-with-gulp-js - gulp.watch()
+//https://css-tricks.com/gulp-for-beginners/ - gulp tricks
+var browserSync = require('browser-sync').create();
+var notifier = require('node-notifier');
+
+// Static server
+gulp.task('browser-sync', function() {
+    browserSync.init({
+      //browser: ["chrome", "firefox", "microsoft edge"],
+      browser: ["Google Chrome"],
+      server: {
+          baseDir: "./www/"
+      }
+    });
+});
+
+
+gulp.task('watch-js', ['browserify'], function (done) {//works taken from : https://wehavefaces.net/gulp-browserify-the-gulp-y-way-bb359b3f9623
+  browserSync.reload();
+  done();
+});
+
+function noti() {
+  browserSync.reload
+  notifier.notify({
+    'title': 'Gulp notification',
+    'message': 'reloaded browser',
+    'wait': true
+  });
+}
+
+gulp.task('serve', ['browser-sync'], function() {
+  gulp.watch(config.js.watch, ['browserify']);
+  gulp.watch(config.js.outputDir + '/bundle.js', browserSync.reload);//works!
+  // gulp.watch(config.js.outputDir + '/bundle.js')
+  //   .on('change', noti);//works!
+    // notifier.notify({
+    //   'title': 'My notification',
+    //   'message': 'Hello, there!'
+    // });
+});
