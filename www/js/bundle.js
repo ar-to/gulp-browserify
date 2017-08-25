@@ -2,7 +2,7 @@
 
 
 module.exports = function() {
-    return console.log('JS works!!3333');
+    return console.log('JS works!!!');
 }
 
 },{}],2:[function(require,module,exports){
