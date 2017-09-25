@@ -4,7 +4,17 @@ var browserify = require('browserify'); // Providers "require" support, CommonJS
 var source = require('vinyl-source-stream'); // Vinyl stream support
 var uglify = require('gulp-uglify');
 
-gulp.task('browserify', function () {//works taken from : https://wehavefaces.net/gulp-browserify-the-gulp-y-way-bb359b3f9623
+// Configuration for Gulp
+var config = {
+  js: {
+    src: './src/js/main.js',
+    watch: './src/js/**/*',
+    outputDir: './www/js',
+    outputFile: 'bundle.js',
+  },
+};
+
+gulp.task('browserify-single', function () {//works taken from : https://wehavefaces.net/gulp-browserify-the-gulp-y-way-bb359b3f9623
   return browserify(config.js.src)
     .bundle()
     .on('error', mapError) // Map error reporting
@@ -12,6 +22,25 @@ gulp.task('browserify', function () {//works taken from : https://wehavefaces.ne
     .pipe(notify({
       message: 'Generated file: <%= file.relative %>',
     }))
+    .pipe(gulp.dest(config.js.outputDir));
+});
+
+//with sourcemaps
+gulp.task('browserify', function () {//https://github.com/gulpjs/gulp/blob/master/docs/recipes/browserify-uglify-sourcemap.md
+  // set up the browserify instance on a task basis
+  var b = browserify({
+    entries: config.js.src,
+    debug: true
+  });
+
+  return b.bundle()
+    .pipe(source(config.js.outputFile))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+        // Add transformation tasks to the pipeline here.
+        //.pipe(uglify())
+        .on('error', gutil.log)
+    .pipe(sourcemaps.write('./map'))
     .pipe(gulp.dest(config.js.outputDir));
 });
 
@@ -28,16 +57,6 @@ var buffer = require('vinyl-buffer'); // Vinyl stream support
 var watchify = require('watchify'); // Watchify for source changes
 var merge = require('utils-merge'); // Object merge tool
 var duration = require('gulp-duration'); // Time aspects of your gulp process
-
-// Configuration for Gulp
-var config = {
-  js: {
-    src: './src/js/main.js',
-    watch: './src/js/**/*',
-    outputDir: './www/js',
-    outputFile: 'bundle.js',
-  },
-};
 
 // Error reporting function
 function mapError(err) {
